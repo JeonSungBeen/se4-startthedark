@@ -1,8 +1,29 @@
 from django.db import models
 from datetime import datetime,timedelta
 from django.contrib.auth.models import User
+from django.db.models.query import QuerySet
 
 # Create your models here.
+
+def today():
+	now = datetime.now()
+	start = datetime.min.replace(year=now.year, month=.now.month, day=now.day)
+	end = (start + timedelta(days=1)) - timedelta.resolution
+	return(start,end)
+
+class EventQuerySet(QuerySet):
+	def today(self):
+		return self.filter(creation_date__range=today())
+ 
+
+class EventManager(models.Manager):
+	def get_query_set(self):
+		return EventQuerySet(self.model) 
+
+	def today(self):
+		self.get_query_set().today()
+
+
 class Event(models.Model):
 	description = models.TextField()
 	creation_date = models.DateTimeField(default=datetime.now)
@@ -11,14 +32,14 @@ class Event(models.Model):
 	attendees = models.ManyToManyField(User,through="Attendance")
 	latest = models.BooleanField(default = True)
 
-	def __imocpde__(self):
+
+	objects =EventManager()
+
+	def __unicode__(self):
 		return self.description
 
 	def save(self, **kwargs):
-		now =datetime.now()
-		start = datetime.min.replace(year=now.year, month = now.month, day=now.day)
-		end = (start + timedelta(days=1)) - timedelta.resolution
-		Event.objects.filter(latest=True, creator=self.creator).filter(creation_date__range(start,end)).update(latest=False)
+		Event.objects..filter(latest=True, creator=self.creator).today().update(latest=False)
 		super(Event, self).save(**kwargs)
 	
 
